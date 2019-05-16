@@ -19,8 +19,9 @@ fasta_dir=path.join(data_dir, "fastas")
 # The genome index has to be re-generated with the latest 2.7.0x release
 homo_version="GRCh38"
 homo_release=96
+chromium_version="V3"
 
-final_matrix=path.join(output_dir, wildcards.chromium_version, "matrix.mtx")
+final_matrix=path.join(output_dir, chromium_version, "matrix.mtx")
 
 rule all:
     input:
@@ -88,31 +89,31 @@ rule doStarSoloV3:
         Strand="Forward",
         Features="Gene",
         UMIdedup="1MM_All",
-        outdir=path.join(output_dir, wildcards.chromium_version)
+        outdir=path.join(output_dir, chromium_version)
     output:
         matrix=final_matrix
     shell:
-        "{star_bin} --soloType Droplet --soloCBwhitelist {input.gtf} --readFilesIn {input.files1} {input.files2} --soloCBstart {params.CBstart} --soloCBlen {params.CBlen} --soloUMIstart {params.UMIstart} --soloUMIlen {params.UMIlen} --soloStrand {params.Strand} --soloFeatures {params.Features} --soloUMIdedup {params.UMIdedup} --soloOutFileNames {params.Outdir} {OutFileNames}"
+        "{star_bin} --soloType Droplet --soloCBwhitelist {input.gtf} --readFilesIn {input.files1} {input.files2} --soloCBstart {params.CBstart} --soloCBlen {params.CBlen} --soloUMIstart {params.UMIstart} --soloUMIlen {params.UMIlen} --soloStrand {params.Strand} --soloFeatures {params.Features} --soloUMIdedup {params.UMIdedup} --soloOutFileNames {params.outdir} {OutFileNames}"
 
 
-rule doStarSoloV2:
-    input:
-        files1=readFilesIn1,
-        files2=readFilesIn2,
-        index=star_index,
-        gtf=annotation
-    params:
-        # See: https://assets.ctfassets.net/an68im79xiti/UhAMGmlaEMmYMaA4A4Uwa/d65ff7b9bb5e88c2bb9e15e58f280e18/CG00052_SingleCell3_ReagentKitv2UserGuide_RevE.pdf
-        # Page 15
-        CBstart=1,
-        CBlen=16,
-        UMIstart=17,
-        UMIlen=10,
-        Strand="Forward",
-        Features="Gene",
-        UMIdedup="1MM_All",
-        outdir=path.join(output_dir, wildcards.chromium_version)
-    output:
-        matrix=final_matrix
-    shell:
-        "{star_bin} --soloType Droplet --soloCBwhitelist {input.gtf} --readFilesIn {input.files1} {input.files2} --soloCBstart {params.CBstart} --soloCBlen {params.CBlen} --soloUMIstart {params.UMIstart} --soloUMIlen {params.UMIlen} --soloStrand {params.Strand} --soloFeatures {params.Features} --soloUMIdedup {params.UMIdedup} --soloOutFileNames {params.Outdir} {OutFileNames}"
+# rule doStarSoloV2:
+#     input:
+#         files1=readFilesIn1,
+#         files2=readFilesIn2,
+#         index=star_index,
+#         gtf=annotation
+#     params:
+#         # See: https://assets.ctfassets.net/an68im79xiti/UhAMGmlaEMmYMaA4A4Uwa/d65ff7b9bb5e88c2bb9e15e58f280e18/CG00052_SingleCell3_ReagentKitv2UserGuide_RevE.pdf
+#         # Page 15
+#         CBstart=1,
+#         CBlen=16,
+#         UMIstart=17,
+#         UMIlen=10,
+#         Strand="Forward",
+#         Features="Gene",
+#         UMIdedup="1MM_All",
+#         outdir=path.join(output_dir, "V2")
+#     output:
+#         matrix=final_matrix
+#     shell:
+#         "{star_bin} --soloType Droplet --soloCBwhitelist {input.gtf} --readFilesIn {input.files1} {input.files2} --soloCBstart {params.CBstart} --soloCBlen {params.CBlen} --soloUMIstart {params.UMIstart} --soloUMIlen {params.UMIlen} --soloStrand {params.Strand} --soloFeatures {params.Features} --soloUMIdedup {params.UMIdedup} --soloOutFileNames {params.Outdir} {OutFileNames}"
