@@ -20,7 +20,7 @@ fasta_dir=path.join(data_dir, "fastas")
 homo_version="GRCh38"
 homo_release=96
 
-final_matrix=path.join(output_dir, "matrix.mtx")
+final_matrix=path.join(output_dir, wildcards.chromium_version, "matrix.mtx")
 
 rule all:
     input:
@@ -69,42 +69,50 @@ rule generateStarIndex:
         "{star_bin} --runThreadN {star_threads} --runMode genomeGenerate --genomeDir {star_indices} --genomeFastaFiles {input.fasta} --sjdbGTFfile {input.gtf} --sjdbOverhang {star_overhang}"
 
 
+OutFileNames="genes.tsv barcodes.tsv matrix.mtx matrixSJ.mtx"
 
-OutFileNames="%s/ genes.tsv barcodes.tsv matrix.mtx matrixSJ.mtx" % output_dir
 
-rule doStarSolo:
+rule doStarSoloV3:
     input:
         files1=readFilesIn1,
         files2=readFilesIn2,
         index=star_index,
         gtf=annotation
     params:
-        if wildcards.chromium_version == "V2":
-            # See: https://assets.ctfassets.net/an68im79xiti/UhAMGmlaEMmYMaA4A4Uwa/d65ff7b9bb5e88c2bb9e15e58f280e18/CG00052_SingleCell3_ReagentKitv2UserGuide_RevE.pdf
-            # Page 15
-            CBstart=1
-            CBlen=16
-            UMIstart=17
-            UMIlen=10
-            Strand="Forward"
-            Features="Gene"
-            UMIdedup="1MM_All"
-
-        elif wildcards.chromium_version == "V3":
-            # See: https://assets.ctfassets.net/an68im79xiti/51xGuiJhVKOeIIceW88gsQ/1db2c9b5c9283d183ff4599fb489a720/CG000183_ChromiumSingleCell3__v3_UG_Rev-A.pdf
-            # Page 14
-            CBstart=1
-            CBlen=16
-            UMIstart=17
-            UMIlen=12
-            Strand="Forward"
-            Features="Gene"
-            UMIdedup="1MM_All"
-        else:
-            print("Not a valid chromium version", wildcards.chromium_version, file=sys.stderr)
-            exit(-1)
-
+        # See: https://assets.ctfassets.net/an68im79xiti/51xGuiJhVKOeIIceW88gsQ/1db2c9b5c9283d183ff4599fb489a720/CG000183_ChromiumSingleCell3__v3_UG_Rev-A.pdf
+        # Page 14
+        CBstart=1,
+        CBlen=16,
+        UMIstart=17,
+        UMIlen=12,
+        Strand="Forward",
+        Features="Gene",
+        UMIdedup="1MM_All",
+        outdir=path.join(output_dir, wildcards.chromium_version)
     output:
         matrix=final_matrix
     shell:
-        "{star_bin} --soloType Droplet --soloCBwhitelist {input.gtf} --readFilesIn {input.files1} {input.files2} --soloCBstart {params.CBstart} --soloCBlen {params.CBlen} --soloUMIstart {params.UMIstart} --soloUMIlen {params.UMIlen} --soloStrand {params.Strand} --soloFeatures {params.Features} --soloUMIdedup {params.UMIdedup} --soloOutFileNames {OutFileNames}"
+        "{star_bin} --soloType Droplet --soloCBwhitelist {input.gtf} --readFilesIn {input.files1} {input.files2} --soloCBstart {params.CBstart} --soloCBlen {params.CBlen} --soloUMIstart {params.UMIstart} --soloUMIlen {params.UMIlen} --soloStrand {params.Strand} --soloFeatures {params.Features} --soloUMIdedup {params.UMIdedup} --soloOutFileNames {params.Outdir} {OutFileNames}"
+
+
+rule doStarSoloV2:
+    input:
+        files1=readFilesIn1,
+        files2=readFilesIn2,
+        index=star_index,
+        gtf=annotation
+    params:
+        # See: https://assets.ctfassets.net/an68im79xiti/UhAMGmlaEMmYMaA4A4Uwa/d65ff7b9bb5e88c2bb9e15e58f280e18/CG00052_SingleCell3_ReagentKitv2UserGuide_RevE.pdf
+        # Page 15
+        CBstart=1,
+        CBlen=16,
+        UMIstart=17,
+        UMIlen=10,
+        Strand="Forward",
+        Features="Gene",
+        UMIdedup="1MM_All",
+        outdir=path.join(output_dir, wildcards.chromium_version)
+    output:
+        matrix=final_matrix
+    shell:
+        "{star_bin} --soloType Droplet --soloCBwhitelist {input.gtf} --readFilesIn {input.files1} {input.files2} --soloCBstart {params.CBstart} --soloCBlen {params.CBlen} --soloUMIstart {params.UMIstart} --soloUMIlen {params.UMIlen} --soloStrand {params.Strand} --soloFeatures {params.Features} --soloUMIdedup {params.UMIdedup} --soloOutFileNames {params.Outdir} {OutFileNames}"
