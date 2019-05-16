@@ -5,7 +5,7 @@ star_bin="STAR"
 data_dir="sources"
 
 # You have to find this whitelist files inside the CellRanger distribution
-# 
+#
 whitelist=path.join(data_dir, "celseq2.barcodes.tsv")
 
 # First read is cDNAFragment sequence
@@ -40,7 +40,7 @@ rule getFasta:
         wget ftp://ftp.ensembl.org/pub/release-{homo_release}/fasta/homo_sapiens/dna/Homo_sapiens.{homo_version}.dna.toplevel.fa.gz
         gunzip -c Homo_sapiens.{homo_version}.dna.toplevel.fa.gz > {output}
         """
-        
+
 
 rule getAnnotation:
     output:
@@ -58,7 +58,7 @@ star_index=path.join(star_indices, "SAindex")
 
 star_threads=4
 star_overhang=100
-        
+
 rule generateStarIndex:
     input:
         fasta=fasta_all,
@@ -70,27 +70,41 @@ rule generateStarIndex:
 
 
 
-chromium_protocol="V2"
-# 10x Chromium v2 protocol
-# Change this for V3
-CBstart=1
-CBlen=16
-UMIstart=17
-UMIlen=10
-Strand="Forward"
-Features="Gene"
-UMIdedup="1MM_All"
 OutFileNames="%s/ genes.tsv barcodes.tsv matrix.mtx matrixSJ.mtx" % output_dir
-        
+
 rule doStarSolo:
     input:
         files1=readFilesIn1,
         files2=readFilesIn2,
         index=star_index,
         gtf=annotation
+    params:
+        if wildcards.chromium_version == "V2":
+            # See: https://assets.ctfassets.net/an68im79xiti/UhAMGmlaEMmYMaA4A4Uwa/d65ff7b9bb5e88c2bb9e15e58f280e18/CG00052_SingleCell3_ReagentKitv2UserGuide_RevE.pdf
+            # Page 15
+            CBstart=1
+            CBlen=16
+            UMIstart=17
+            UMIlen=10
+            Strand="Forward"
+            Features="Gene"
+            UMIdedup="1MM_All"
+
+        elif wildcards.chromium_version == "V3":
+            # See: https://assets.ctfassets.net/an68im79xiti/51xGuiJhVKOeIIceW88gsQ/1db2c9b5c9283d183ff4599fb489a720/CG000183_ChromiumSingleCell3__v3_UG_Rev-A.pdf
+            # Page 14
+            CBstart=1
+            CBlen=16
+            UMIstart=17
+            UMIlen=12
+            Strand="Forward"
+            Features="Gene"
+            UMIdedup="1MM_All"
+        else:
+            print("Not a valid chromium version", wildcards.chromium_version, file=sys.stderr)
+            exit(-1)
+
     output:
         matrix=final_matrix
     shell:
-        "{star_bin} --soloType Droplet --soloCBwhitelist {input.gtf} --readFilesIn {input.files1} {input.files2} --soloCBstart {CBstart} --soloCBlen {CBlen} --soloUMIstart {UMIstart} --soloUMIlen {UMIlen} --soloStrand {Strand} --soloFeatures {Features} --soloUMIdedup {UMIdedup} --soloOutFileNames {OutFileNames}"
-
-
+        "{star_bin} --soloType Droplet --soloCBwhitelist {input.gtf} --readFilesIn {input.files1} {input.files2} --soloCBstart {params.CBstart} --soloCBlen {params.CBlen} --soloUMIstart {params.UMIstart} --soloUMIlen {params.UMIlen} --soloStrand {params.Strand} --soloFeatures {params.Features} --soloUMIdedup {params.UMIdedup} --soloOutFileNames {OutFileNames}"
