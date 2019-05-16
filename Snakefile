@@ -17,19 +17,26 @@ output_dir="outputs"
 fasta_dir=path.join(data_dir, "fastas")
 
 # The genome index has to be re-generated with the latest 2.7.0x release
+chromium_version="V3"
 homo_version="GRCh38"
 homo_release=96
-chromium_version="V3"
 
 final_matrix=path.join(output_dir, chromium_version, "matrix.mtx")
+
+fasta_all=path.join(data_dir, "%s_r%d.all.fa" % (homo_version, homo_release))
+annotation=path.join(data_dir, "%s_r%d.gtf" % (homo_version, homo_release))
+
+star_threads=15
+star_overhang=100
+star_index_directory="star_indices"
+star_indices=path.join(star_index_directory, homo_version)
+star_index=path.join(star_indices, "SAindex")
+
+OutFileNames="genes.tsv barcodes.tsv matrix.mtx matrixSJ.mtx"
 
 rule all:
     input:
         final_matrix
-
-
-fasta_all=path.join(data_dir, "%s_r%d.all.fa" % (homo_version, homo_release))
-annotation=path.join(data_dir, "%s_r%d.gtf" % (homo_version, homo_release))
 
 
 rule getFasta:
@@ -38,8 +45,8 @@ rule getFasta:
         fasta_all
     shell:
         """
-        wget ftp://ftp.ensembl.org/pub/release-{homo_release}/fasta/homo_sapiens/dna/Homo_sapiens.{homo_version}.dna.toplevel.fa.gz
-        gunzip -c Homo_sapiens.{homo_version}.dna.toplevel.fa.gz > {output}
+        wget ftp://ftp.ensembl.org/pub/release-{homo_release}/fasta/homo_sapiens/dna/Homo_sapiens.{homo_version}.dna.primary_assembly.fa.gz
+        gunzip -c Homo_sapiens.{homo_version}.dna.primary_assembly.fa.gz > {output}
         """
 
 
@@ -52,14 +59,6 @@ rule getAnnotation:
         gunzip -c Homo_sapiens.{homo_version}.{homo_release}.gtf.gz > {output.gtf}
         """
 
-
-star_index_directory="star_indices"
-star_indices=path.join(star_index_directory, homo_version)
-star_index=path.join(star_indices, "SAindex")
-
-star_threads=4
-star_overhang=100
-
 rule generateStarIndex:
     input:
         fasta=fasta_all,
@@ -68,9 +67,6 @@ rule generateStarIndex:
         sindex=star_index
     shell:
         "{star_bin} --runThreadN {star_threads} --runMode genomeGenerate --genomeDir {star_indices} --genomeFastaFiles {input.fasta} --sjdbGTFfile {input.gtf} --sjdbOverhang {star_overhang}"
-
-
-OutFileNames="genes.tsv barcodes.tsv matrix.mtx matrixSJ.mtx"
 
 
 rule doStarSoloV3:
