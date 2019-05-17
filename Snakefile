@@ -6,7 +6,7 @@ data_dir="sources"
 
 # You have to find this whitelist files inside the CellRanger distribution
 #
-whitelist=path.join(data_dir, "celseq2.barcodes.tsv")
+whitelist=path.join(data_dir, "737K-august-2016.txt")
 
 # First read is cDNAFragment sequence
 # Second read is the CellBarcodeUMI sequence (Cell+UMI) read
@@ -65,10 +65,10 @@ rule generateStarIndex:
         gtf=annotation
     output:
         sindex=star_index
-    shell:
-        "{star_bin} --runThreadN {star_threads} --runMode genomeGenerate --genomeDir {star_indices} --genomeFastaFiles {input.fasta} --sjdbGTFfile {input.gtf} --sjdbOverhang {star_overhang}"
     log:
         "logs/generateStarIndex.log"
+    shell:
+        "{star_bin} --runThreadN {star_threads} --runMode genomeGenerate --genomeDir {star_indices} --genomeFastaFiles {input.fasta} --sjdbGTFfile {input.gtf} --sjdbOverhang {star_overhang}"
 
 
 rule doStarSoloV3:
@@ -76,7 +76,6 @@ rule doStarSoloV3:
         files1=readFilesIn1,
         files2=readFilesIn2,
         index=star_index,
-        gtf=annotation
     params:
         # See: https://assets.ctfassets.net/an68im79xiti/51xGuiJhVKOeIIceW88gsQ/1db2c9b5c9283d183ff4599fb489a720/CG000183_ChromiumSingleCell3__v3_UG_Rev-A.pdf
         # Page 14
@@ -90,19 +89,13 @@ rule doStarSoloV3:
         outdir=path.join(output_dir, chromium_version)
     output:
         matrix=final_matrix
-    shell:
-        "{star_bin} --soloType Droplet --soloCBwhitelist {input.gtf} --readFilesIn {input.files1} {input.files2} --soloCBstart {params.CBstart} --soloCBlen {params.CBlen} --soloUMIstart {params.UMIstart} --soloUMIlen {params.UMIlen} --soloStrand {params.Strand} --soloFeatures {params.Features} --soloUMIdedup {params.UMIdedup} --soloOutFileNames {params.outdir} {OutFileNames}"
     log:
         "logs/doStarSoloV3.log"
+    shell:
+        "{star_bin} --soloType Droplet --soloCBwhitelist {whitelist} --readFilesIn {input.files1} {input.files2} --readFilesCommand zcat --genomeDir {star_indices} --soloCBstart {params.CBstart} --soloCBlen {params.CBlen} --soloUMIstart {params.UMIstart} --soloUMIlen {params.UMIlen} --soloStrand {params.Strand} --soloFeatures {params.Features} --soloUMIdedup {params.UMIdedup} --soloOutFileNames {params.outdir} {OutFileNames}"
 
 
 # rule doStarSoloV2:
-#     input:
-#         files1=readFilesIn1,
-#         files2=readFilesIn2,
-#         index=star_index,
-#         gtf=annotation
-#     params:
 #         # See: https://assets.ctfassets.net/an68im79xiti/UhAMGmlaEMmYMaA4A4Uwa/d65ff7b9bb5e88c2bb9e15e58f280e18/CG00052_SingleCell3_ReagentKitv2UserGuide_RevE.pdf
 #         # Page 15
 #         CBstart=1,
@@ -113,7 +106,3 @@ rule doStarSoloV3:
 #         Features="Gene",
 #         UMIdedup="1MM_All",
 #         outdir=path.join(output_dir, "V2")
-#     output:
-#         matrix=final_matrix
-#     shell:
-#         "{star_bin} --soloType Droplet --soloCBwhitelist {input.gtf} --readFilesIn {input.files1} {input.files2} --soloCBstart {params.CBstart} --soloCBlen {params.CBlen} --soloUMIstart {params.UMIstart} --soloUMIlen {params.UMIlen} --soloStrand {params.Strand} --soloFeatures {params.Features} --soloUMIdedup {params.UMIdedup} --soloOutFileNames {params.Outdir} {OutFileNames}"
