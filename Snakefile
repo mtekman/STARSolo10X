@@ -67,6 +67,8 @@ rule generateStarIndex:
         sindex=star_index
     shell:
         "{star_bin} --runThreadN {star_threads} --runMode genomeGenerate --genomeDir {star_indices} --genomeFastaFiles {input.fasta} --sjdbGTFfile {input.gtf} --sjdbOverhang {star_overhang}"
+    log:
+        "logs/generateStarIndex.log"
 
 
 rule doStarSoloV3:
@@ -90,6 +92,8 @@ rule doStarSoloV3:
         matrix=final_matrix
     shell:
         "{star_bin} --soloType Droplet --soloCBwhitelist {input.gtf} --readFilesIn {input.files1} {input.files2} --soloCBstart {params.CBstart} --soloCBlen {params.CBlen} --soloUMIstart {params.UMIstart} --soloUMIlen {params.UMIlen} --soloStrand {params.Strand} --soloFeatures {params.Features} --soloUMIdedup {params.UMIdedup} --soloOutFileNames {params.outdir} {OutFileNames}"
+    log:
+        "logs/doStarSoloV3.log"
 
 
 # rule doStarSoloV2:
