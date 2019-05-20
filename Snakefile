@@ -90,7 +90,7 @@ rule doStarSoloV2:  # <- Note that because the barcode reads are 26bp long, this
     log:
         "logs/doStarSoloV3.log"
     shell:
-        "{star_bin} --soloType Droplet --soloCBwhitelist {whitelist} --readFilesIn {readSequence} {readBarcodes} --readFilesCommand zcat --genomeDir {star_indices} --soloCBstart {params.CBstart} --soloCBlen {params.CBlen} --soloUMIstart {params.UMIstart} --soloUMIlen {params.UMIlen} --soloStrand {params.Strand} --soloFeatures {params.Features} --soloUMIdedup {params.UMIdedup} --soloOutFileNames {params.outdir} {OutFileNames}"
+        "{star_bin} --runThreadN {star_threads} --soloType Droplet --soloCBwhitelist {whitelist} --readFilesIn {readSequence} {readBarcodes} --readFilesCommand zcat --genomeDir {star_indices} --soloCBstart {params.CBstart} --soloCBlen {params.CBlen} --soloUMIstart {params.UMIstart} --soloUMIlen {params.UMIlen} --soloStrand {params.Strand} --soloFeatures {params.Features} --soloUMIdedup {params.UMIdedup} --soloOutFileNames {params.outdir} {OutFileNames}"
 
 
 # rule doStarSoloV2:
